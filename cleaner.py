@@ -36,11 +36,11 @@ def analyze_and_process_file(df):
 
     available_dates = sorted(list(set(re.findall(r'(\d{4}-\d{2}-\d{2})', ' '.join(position_columns)))))
 
-    data_preview = df_cleaned.head(50).to_dict('records')
+    processed_data = df_cleaned.to_dict('records')
 
     return {
-        "full_data": df_cleaned,
+        "full_data_df": df_cleaned,
         "stats": stats,
         "available_dates": available_dates,
-        "data_preview": data_preview
+        "processed_data": processed_data
     }

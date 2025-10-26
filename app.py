@@ -30,12 +30,12 @@ def upload_and_analyze():
         temp_filename = f"processed_{os.urandom(8).hex()}.xlsx"
         temp_filepath = os.path.join(TEMP_DIR, temp_filename)
 
-        result_package["full_data"].to_excel(temp_filepath, index=False)
+        result_package["full_data_df"].to_excel(temp_filepath, index=False)
 
         response_data = {
             "stats": result_package["stats"],
             "available_dates": result_package["available_dates"],
-            "data_preview": result_package["data_preview"],
+            "processed_data": result_package["processed_data"],
             "download_token": temp_filename
         }
 
