@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Yandex.Webmaster Cleaner</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 50px auto; background: #f4f4f9; color: #333; }
+        .container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #5a5a5a; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+        input[type="submit"] { background: #007bff; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 4px; margin-top: 20px;}
+        input[type="submit"]:hover { background: #0056b3; }
+        .hidden { display: none; }
+        #status { margin-top: 15px; color: #d9534f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Yandex.Webmaster Excel Cleaner</h1>
+
+        <form id="process-form" action="/process" method="post" enctype="multipart/form-data">
+            <label for="file">1. Выберите Excel-файл:</label>
+            <input type="file" id="file" name="file" required>
+
+            <div id="dynamic-fields" class="hidden">
+                <label for="date">2. Выберите дату для анализа:</label>
+                <select id="date" name="date" required></select>
+
+                <label for="top_n">3. Укажите ТОП (например, 10):</label>
+                <input type="number" id="top_n" name="top_n" required min="1" placeholder="10">
+
+                <input type="submit" value="Обработать и скачать">
+            </div>
+        </form>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Находим наши HTML-элементы
+        const fileInput = document.getElementById('file');
+        const dynamicFields = document.getElementById('dynamic-fields');
+        const dateSelect = document.getElementById('date');
+        const statusDiv = document.getElementById('status');
+        const processForm = document.getElementById('process-form');
+
+        // Вешаем "слушатель" на выбор файла. Код сработает, как только пользователь выберет файл.
+        fileInput.addEventListener('change', async function() {
+            // Очищаем старые статусы и прячем поля
+            statusDiv.textContent = '';
+            dynamicFields.classList.add('hidden');
+
+            const file = this.files[0];
+            if (!file) return;
+
+            statusDiv.textContent = 'Анализирую файл...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // Отправляем файл на наш новый endpoint `/get-dates`
+                const response = await fetch('/get-dates', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json(); // Читаем ответ от сервера
+
+                if (!response.ok) {
+                    // Если сервер вернул ошибку, показываем ее
+                    throw new Error(result.error || 'Неизвестная ошибка');
+                }
+
+                // Очищаем старые опции в выпадающем списке
+                dateSelect.innerHTML = '';
+                // Создаем и добавляем новые опции для каждой даты из ответа
+                result.dates.forEach(date => {
+                    const option = document.createElement('option');
+                    option.value = date;
+                    option.textContent = date;
+                    dateSelect.appendChild(option);
+                });
+
+                // Показываем скрытые поля
+                dynamicFields.classList.remove('hidden');
+                statusDiv.textContent = ''; // Убираем сообщение "Анализирую файл..."
+
+            } catch (error) {
+                // Если произошла ошибка сети или ошибка от сервера
+                statusDiv.textContent = `Ошибка: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
